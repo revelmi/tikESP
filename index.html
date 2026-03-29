@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptAuto SaaS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        body { font-family: 'Tajawal', sans-serif; }
+        textarea { direction: ltr; text-align: left; }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- Header & API Key -->
+        <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-6 h-6 text-indigo-600"></i>
+                    ScriptAuto SaaS
+                </h1>
+                <p class="text-slate-500 mt-1">أداة أوتوماتيكية لترجمة السكريبتات واستخراج الصور</p>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <input type="password" id="apiKeyInput" placeholder="Gemini API Key..." class="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-left" dir="ltr">
+                <button id="generateBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 w-full sm:w-auto justify-center">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span id="generateBtnText">عالج السكريبت</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Input Script -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2 font-medium text-slate-700">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> السكريبت الأصلي (English)
+                </div>
+                <textarea id="inputScript" placeholder="حط السكريبت ديالك هنا..." class="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
+            </div>
+
+            <!-- Translated Script -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-medium text-slate-700">
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i> السكريبت المترجم (Español + Visuals)
+                    </div>
+                    <button onclick="copyText('translatedScript')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <textarea id="translatedScript" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
+            </div>
+
+            <!-- Pure Text -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-medium text-slate-700">
+                        <i data-lucide="type" class="w-4 h-4"></i> النص الصافي (Español فقط)
+                        <span id="charCount" class="text-xs px-2 py-1 rounded-full font-bold bg-slate-200 text-slate-700">0/1100 حرف</span>
+                    </div>
+                    <button onclick="copyText('pureText')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <textarea id="pureText" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
+            </div>
+
+            <!-- Visuals -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-medium text-slate-700">
+                        <i data-lucide="image" class="w-4 h-4"></i> الصور (Visual Prompts)
+                    </div>
+                    <button onclick="copyText('visualsText')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                </div>
+                <textarea id="visualsText" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
+            </div>
+        </div>
+
+        <!-- Image Generation Section -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+            <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <div class="flex items-center gap-2 font-medium text-slate-700">
+                    <i data-lucide="image" class="w-5 h-5 text-indigo-600"></i> توليد الصور (Nano Banana 2)
+                </div>
+                <button id="generateImagesBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    <span id="generateImagesBtnText">توليد الصور</span>
+                </button>
+            </div>
+            <div id="imagesContainer" class="p-6 space-y-8 text-center text-slate-500">
+                عالج السكريبت أولا باش نلقاو الصور لي غنولدو
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script type="module">
+        import { GoogleGenAI } from 'https://esm.run/@google/genai';
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        const els = {
+            apiKey: document.getElementById('apiKeyInput'),
+            input: document.getElementById('inputScript'),
+            translated: document.getElementById('translatedScript'),
+            pure: document.getElementById('pureText'),
+            visuals: document.getElementById('visualsText'),
+            charCount: document.getElementById('charCount'),
+            genBtn: document.getElementById('generateBtn'),
+            genBtnText: document.getElementById('generateBtnText'),
+            genImgBtn: document.getElementById('generateImagesBtn'),
+            genImgBtnText: document.getElementById('generateImagesBtnText'),
+            imgContainer: document.getElementById('imagesContainer')
+        };
+
+        // Copy Function
+        window.copyText = (id) => {
+            const text = document.getElementById(id).value;
+            if(text) {
+                navigator.clipboard.writeText(text);
+                alert('تم النسخ بنجاح!');
+            }
+        };
+
+        // 1. Generate Text Logic
+        els.genBtn.addEventListener('click', async () => {
+            const apiKey = els.apiKey.value.trim();
+            const script = els.input.value.trim();
+            
+            if (!apiKey) return alert('عافاك دخل مفتاح API ديال Gemini الفوق');
+            if (!script) return alert('عافاك دخل السكريبت');
+
+            els.genBtn.disabled = true;
+            els.genBtnText.textContent = 'جاري المعالجة...';
+
+            try {
+                const ai = new GoogleGenAI({ apiKey });
+                const prompt = `أنا غادي نعطيك سكريبت من قناة يوتيوب أخرى و المطلوب منك ترجمة السكريبت باللغة الاسبانية
+* نفس الفكرة + نفس الأحداث 
+* ما تبدلش بزاف، غير صياغة ذكية باش يتفادى حقوق النشر
+* خليه طبيعي وكأنه مكتوب أصلاً بالاسبانية
+* ولكن الفيديوهات لي كنعطيك كتكون طويلة غادي نبغيك تلخص ليا شنو قالو في فيديو 1-2 دقائق
+
+⚠️ أسلوب الكتابة (مهم جداً):
+* اجعل النص مشوقاً جداً (Hook) يجذب المشاهد من الثانية الأولى.
+* استخدم أسلوب السرد القصصي (Storytelling) الذي يثير الفضول ويجعل المشاهد ينتظر المعلومة القادمة بفارغ الصبر.
+* استعمل جملاً قصيرة وسريعة الإيقاع تناسب فيديوهات Shorts/Reels.
+
+⚠️ مهم جداً: النص الصافي (بدون احتساب علامات [VISUAL: ...]) يجب ألا يتجاوز 1100 حرف بأي شكل من الأشكال. لخص بذكاء لتلتزم بهذا الحد.
+
+⚠️ مهم: إلا كان فيه شخصية مشهورة (بحال Elon Musk): 
+❌ ما تستعملش مشاهد مباشرة (interview / talking) 
+❌ ما تقولش: "he said in an interview" 
+✅ استعمل narration:
+* "Elon Musk once mentioned..."
+* "According to Elon Musk..."
+* "He explained that..."
+
+نظام الصور (أساسي للمونتاج):
+⚠️ يجب أن يحتوي السكريبت على 7 إلى 9 صور (Visuals) على الأقل. ضع علامة [VISUAL: ...] جديدة كل جملتين تقريباً لتغيير المشهد باستمرار.
+وخاصك تلتزم بهاد القواعد: 
+
+🟢 مشاهد عادية (AI Images) عطيني prompt احترافي لصورة:
+* cinematic
+* realistic
+* detailed
+* lighting + mood 
+مثال: [VISUAL: cinematic realistic street in Casablanca old medina, warm sunset lighting, narrow alley, traditional Moroccan atmosphere, الناس كيدوزو, 4K, high detail] 
+
+🔵 شخصيات مشهورة 
+❌ ما تعطينيش prompt ديال AI 
+✅ عطيني غير وصف نقدر نقلب عليه فـ Google 
+مثال: [VISUAL: Elon Musk speaking on stage, Tesla event, microphone, audience] أو: [VISUAL: Elon Musk portrait serious face, dark background] 
+🎯 الهدف: سهل البحث فـ Google Images 
+
+⚫ مواضيع غامضة / مظلمة استعمل:
+* silhouette
+* shadows
+* dark cinematic style 
+مثال: [VISUAL: dark silhouette of a man standing alone, shadows, fog, mysterious atmosphere, cinematic lighting] 
+
+🟡 مفاهيم أو أفكار استعمل صور رمزية: 
+مثال: [VISUAL: broken clock, time passing concept, dark cinematic lighting]
+
+⚠️ تعليمات صارمة جداً لشكل المخرجات (OUTPUT FORMAT):
+1. أعطني السكريبت مباشرة. لا تكتب أي مقدمات، لا تكتب أي شروحات، ولا تكتب أي خاتمة.
+2. لا تستعمل أي إيموجي (Emojis) نهائياً في إجابتك.
+3. لا تستعمل أي تنسيق Markdown (مثل ** أو ***).
+4. ابدأ مباشرة بـ [VISUAL: ...] ثم النص الإسباني.
+5. ⚠️ مهم جداً: اترك سطراً فارغاً (Blank Line) بين كل فقرة (التي تتكون من [VISUAL: ...] والنص التابع لها) والفقرة التي تليها، لكي يكون النص مقسماً وواضحاً.
+6. تذكر: النص الإسباني فقط يجب أن يكون أقل من 1100 حرف.
+7. تذكر: يجب أن تدرج من 7 إلى 9 علامات [VISUAL: ...] في السكريبت.
+
+السكريبت المطلوب معالجته:
+${script}`;
+
+                const response = await ai.models.generateContent({
+                    model: 'gemini-3.1-pro-preview',
+                    contents: prompt,
+                });
+
+                let text = response.text || '';
+                text = text.replace(/[*#]/g, '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]/gu, '');
+                text = text.replace(/\n*(\[VISUAL:)/g, '\n\n$1').trim();
+
+                els.translated.value = text;
+
+                const visualRegex = /\[VISUAL:\s*([\s\S]*?)\]/g;
+                const pure = text.replace(visualRegex, '').replace(/\n{3,}/g, '\n\n').trim();
+                els.pure.value = pure;
+                
+                els.charCount.textContent = `${pure.length}/1100 حرف`;
+                els.charCount.className = `text-xs px-2 py-1 rounded-full font-bold ${pure.length > 1100 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+
+                const extractedVisuals = [];
+                let match;
+                while ((match = visualRegex.exec(text)) !== null) {
+                    extractedVisuals.push(match[1].trim());
+                }
+                els.visuals.value = extractedVisuals.map((v, i) => `${i + 1}. ${v}`).join('\n\n');
+                
+                els.imgContainer.innerHTML = 'كليكي على "توليد الصور" باش نصايبو 3 تصاور لكل مشهد (9:16)';
+
+            } catch (err) {
+                console.error(err);
+                alert('وقع خطأ أثناء المعالجة. تأكد من مفتاح API ديالك.');
+            } finally {
+                els.genBtn.disabled = false;
+                els.genBtnText.textContent = 'عالج السكريبت';
+            }
+        });
+
+        // 2. Generate Images Logic
+        els.genImgBtn.addEventListener('click', async () => {
+            const apiKey = els.apiKey.value.trim();
+            const visualsText = els.visuals.value.trim();
+
+            if (!apiKey) return alert('عافاك دخل مفتاح API ديال Gemini الفوق');
+            if (!visualsText) return alert('عافاك عالج السكريبت أولا باش نلقاو الصور');
+
+            els.genImgBtn.disabled = true;
+            els.genImgBtnText.textContent = 'جاري توليد الصور...';
+            
+            const prompts = visualsText.split('\n\n').map(p => p.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+            els.imgContainer.innerHTML = '';
+            els.imgContainer.className = 'p-6 space-y-8';
+
+            try {
+                const ai = new GoogleGenAI({ apiKey });
+
+                for (let i = 0; i < prompts.length; i++) {
+                    const prompt = prompts[i];
+                    
+                    // Add UI section for this prompt
+                    const section = document.createElement('div');
+                    section.className = 'border border-slate-100 rounded-xl p-4 bg-slate-50';
+                    section.innerHTML = `
+                        <h3 class="font-medium text-slate-800 mb-4 text-left" dir="ltr">
+                            <span class="text-indigo-600 font-bold mr-2">#${i + 1}</span>${prompt}
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="grid-${i}">
+                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
+                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
+                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
+                        </div>
+                    `;
+                    els.imgContainer.appendChild(section);
+
+                    const grid = document.getElementById(`grid-${i}`);
+                    
+                    try {
+                        // Generate 3 images in parallel
+                        const promises = Array.from({ length: 3 }).map(async () => {
+                            const res = await ai.models.generateContent({
+                                model: 'gemini-3.1-flash-image-preview',
+                                contents: prompt,
+                                config: { imageConfig: { aspectRatio: "9:16" } }
+                            });
+                            const parts = res.candidates?.[0]?.content?.parts || [];
+                            for (const part of parts) {
+                                if (part.inlineData) {
+                                    return 'data:' + (part.inlineData.mimeType || 'image/png') + ';base64,' + part.inlineData.data;
+                                }
+                            }
+                            return null;
+                        });
+
+                        const images = await Promise.all(promises);
+                        grid.innerHTML = '';
+                        
+                        images.forEach((img, imgIdx) => {
+                            if (img) {
+                                grid.innerHTML += `
+                                    <div class="relative aspect-[9/16] rounded-lg overflow-hidden border border-slate-200 shadow-sm group">
+                                        <img src="${img}" class="w-full h-full object-cover">
+                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <a href="${img}" download="image-${i+1}-${imgIdx+1}.png" class="bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100">
+                                                <i data-lucide="download" class="w-5 h-5"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        lucide.createIcons();
+                    } catch (e) {
+                        console.error(e);
+                        grid.innerHTML = '<div class="col-span-3 text-red-500 text-sm">خطأ في توليد الصور لهاد المشهد</div>';
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                alert('وقع خطأ أثناء توليد الصور');
+            } finally {
+                els.genImgBtn.disabled = false;
+                els.genImgBtnText.textContent = 'توليد الصور';
+            }
+        });
+    </script>
+</body>
+</html>
