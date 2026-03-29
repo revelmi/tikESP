@@ -4,21 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ScriptAuto SaaS</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
         body { font-family: 'Tajawal', sans-serif; }
-        textarea { direction: ltr; text-align: left; }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
+<body class="bg-slate-50 p-4 md:p-8 text-slate-900 min-h-screen">
     <div class="max-w-7xl mx-auto space-y-6">
-        
-        <!-- Header & API Key -->
+        <!-- Header -->
         <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -27,33 +24,39 @@
                 </h1>
                 <p class="text-slate-500 mt-1">أداة أوتوماتيكية لترجمة السكريبتات واستخراج الصور</p>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                <input type="password" id="apiKeyInput" placeholder="Gemini API Key..." class="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-left" dir="ltr">
-                <button id="generateBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 w-full sm:w-auto justify-center">
-                    <i data-lucide="sparkles" class="w-5 h-5"></i>
-                    <span id="generateBtnText">عالج السكريبت</span>
+            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <input type="password" id="apiKey" placeholder="Gemini API Key..." class="border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-left" dir="ltr">
+                <button id="exportBtn" onclick="exportToHTML()" disabled class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 justify-center">
+                    <i data-lucide="download" class="w-5 h-5"></i> تصدير HTML
+                </button>
+                <button id="generateBtn" onclick="handleGenerate()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50 justify-center">
+                    <i data-lucide="sparkles" class="w-5 h-5" id="btnIcon"></i>
+                    <span id="btnText">عالج السكريبت</span>
                 </button>
             </div>
         </header>
 
+        <!-- Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Input Script -->
+            <!-- Input -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
-                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center gap-2 font-medium text-slate-700">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> السكريبت الأصلي (English)
+                <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2 font-medium text-slate-700">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> السكريبت الأصلي (English)
+                    </div>
                 </div>
-                <textarea id="inputScript" placeholder="حط السكريبت ديالك هنا..." class="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
+                <textarea id="inputScript" placeholder="حط السكريبت ديالك هنا... (خاصو يكون فيه [VISUAL: ...])" class="flex-1 w-full p-4 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-left" dir="ltr"></textarea>
             </div>
 
-            <!-- Translated Script -->
+            <!-- Translated -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[400px]">
                 <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2 font-medium text-slate-700">
                         <i data-lucide="arrow-right" class="w-4 h-4"></i> السكريبت المترجم (Español + Visuals)
                     </div>
-                    <button onclick="copyText('translatedScript')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    <button onclick="copyText('translatedScript', this)" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
                 </div>
-                <textarea id="translatedScript" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
+                <textarea id="translatedScript" readonly placeholder="النتيجة غتبان هنا..." class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none text-left" dir="ltr"></textarea>
             </div>
 
             <!-- Pure Text -->
@@ -61,11 +64,11 @@
                 <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                     <div class="flex items-center gap-2 font-medium text-slate-700">
                         <i data-lucide="type" class="w-4 h-4"></i> النص الصافي (Español فقط)
-                        <span id="charCount" class="text-xs px-2 py-1 rounded-full font-bold bg-slate-200 text-slate-700">0/1100 حرف</span>
+                        <span id="charCount" class="hidden text-xs px-2 py-1 rounded-full font-bold"></span>
                     </div>
-                    <button onclick="copyText('pureText')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    <button onclick="copyText('pureText', this)" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
                 </div>
-                <textarea id="pureText" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
+                <textarea id="pureText" readonly placeholder="النص بلا visuals غيبان هنا..." class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none text-left" dir="ltr"></textarea>
             </div>
 
             <!-- Visuals -->
@@ -74,73 +77,39 @@
                     <div class="flex items-center gap-2 font-medium text-slate-700">
                         <i data-lucide="image" class="w-4 h-4"></i> الصور (Visual Prompts)
                     </div>
-                    <button onclick="copyText('visualsText')" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    <button onclick="copyText('visuals', this)" class="text-slate-500 hover:text-slate-700"><i data-lucide="copy" class="w-4 h-4"></i></button>
                 </div>
-                <textarea id="visualsText" readonly class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none"></textarea>
-            </div>
-        </div>
-
-        <!-- Image Generation Section -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
-            <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                <div class="flex items-center gap-2 font-medium text-slate-700">
-                    <i data-lucide="image" class="w-5 h-5 text-indigo-600"></i> توليد الصور (Nano Banana 2)
-                </div>
-                <button id="generateImagesBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors disabled:opacity-50">
-                    <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    <span id="generateImagesBtnText">توليد الصور</span>
-                </button>
-            </div>
-            <div id="imagesContainer" class="p-6 space-y-8 text-center text-slate-500">
-                عالج السكريبت أولا باش نلقاو الصور لي غنولدو
+                <textarea id="visuals" readonly placeholder="وصف الصور غيبان هنا..." class="flex-1 w-full p-4 resize-none bg-slate-50/50 focus:outline-none text-left" dir="ltr"></textarea>
             </div>
         </div>
     </div>
 
-    <!-- Application Logic -->
-    <script type="module">
-        import { GoogleGenAI } from 'https://esm.run/@google/genai';
-
-        // Initialize Icons
+    <script>
+        // Initialize icons
         lucide.createIcons();
 
-        const els = {
-            apiKey: document.getElementById('apiKeyInput'),
-            input: document.getElementById('inputScript'),
-            translated: document.getElementById('translatedScript'),
-            pure: document.getElementById('pureText'),
-            visuals: document.getElementById('visualsText'),
-            charCount: document.getElementById('charCount'),
-            genBtn: document.getElementById('generateBtn'),
-            genBtnText: document.getElementById('generateBtnText'),
-            genImgBtn: document.getElementById('generateImagesBtn'),
-            genImgBtnText: document.getElementById('generateImagesBtnText'),
-            imgContainer: document.getElementById('imagesContainer')
-        };
-
-        // Copy Function
-        window.copyText = (id) => {
-            const text = document.getElementById(id).value;
-            if(text) {
-                navigator.clipboard.writeText(text);
-                alert('تم النسخ بنجاح!');
-            }
-        };
-
-        // 1. Generate Text Logic
-        els.genBtn.addEventListener('click', async () => {
-            const apiKey = els.apiKey.value.trim();
-            const script = els.input.value.trim();
+        async function handleGenerate() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const inputScript = document.getElementById('inputScript').value.trim();
             
-            if (!apiKey) return alert('عافاك دخل مفتاح API ديال Gemini الفوق');
-            if (!script) return alert('عافاك دخل السكريبت');
+            if (!apiKey) {
+                alert('عافاك دخل API Key ديال Gemini الفوق باش يخدم السكريبت.');
+                return;
+            }
+            if (!inputScript) return;
 
-            els.genBtn.disabled = true;
-            els.genBtnText.textContent = 'جاري المعالجة...';
+            const btn = document.getElementById('generateBtn');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnText = document.getElementById('btnText');
+            
+            // Set loading state
+            btn.disabled = true;
+            btnIcon.setAttribute('data-lucide', 'loader-2');
+            btnIcon.classList.add('spin');
+            lucide.createIcons();
+            btnText.innerText = 'جاري المعالجة...';
 
-            try {
-                const ai = new GoogleGenAI({ apiKey });
-                const prompt = `أنا غادي نعطيك سكريبت من قناة يوتيوب أخرى و المطلوب منك ترجمة السكريبت باللغة الاسبانية
+            const prompt = `أنا غادي نعطيك سكريبت من قناة يوتيوب أخرى و المطلوب منك ترجمة السكريبت باللغة الاسبانية
 * نفس الفكرة + نفس الأحداث 
 * ما تبدلش بزاف، غير صياغة ذكية باش يتفادى حقوق النشر
 * خليه طبيعي وكأنه مكتوب أصلاً بالاسبانية
@@ -197,130 +166,138 @@
 7. تذكر: يجب أن تدرج من 7 إلى 9 علامات [VISUAL: ...] في السكريبت.
 
 السكريبت المطلوب معالجته:
-${script}`;
-
-                const response = await ai.models.generateContent({
-                    model: 'gemini-3.1-pro-preview',
-                    contents: prompt,
-                });
-
-                let text = response.text || '';
-                text = text.replace(/[*#]/g, '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]/gu, '');
-                text = text.replace(/\n*(\[VISUAL:)/g, '\n\n$1').trim();
-
-                els.translated.value = text;
-
-                const visualRegex = /\[VISUAL:\s*([\s\S]*?)\]/g;
-                const pure = text.replace(visualRegex, '').replace(/\n{3,}/g, '\n\n').trim();
-                els.pure.value = pure;
-                
-                els.charCount.textContent = `${pure.length}/1100 حرف`;
-                els.charCount.className = `text-xs px-2 py-1 rounded-full font-bold ${pure.length > 1100 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
-
-                const extractedVisuals = [];
-                let match;
-                while ((match = visualRegex.exec(text)) !== null) {
-                    extractedVisuals.push(match[1].trim());
-                }
-                els.visuals.value = extractedVisuals.map((v, i) => `${i + 1}. ${v}`).join('\n\n');
-                
-                els.imgContainer.innerHTML = 'كليكي على "توليد الصور" باش نصايبو 3 تصاور لكل مشهد (9:16)';
-
-            } catch (err) {
-                console.error(err);
-                alert('وقع خطأ أثناء المعالجة. تأكد من مفتاح API ديالك.');
-            } finally {
-                els.genBtn.disabled = false;
-                els.genBtnText.textContent = 'عالج السكريبت';
-            }
-        });
-
-        // 2. Generate Images Logic
-        els.genImgBtn.addEventListener('click', async () => {
-            const apiKey = els.apiKey.value.trim();
-            const visualsText = els.visuals.value.trim();
-
-            if (!apiKey) return alert('عافاك دخل مفتاح API ديال Gemini الفوق');
-            if (!visualsText) return alert('عافاك عالج السكريبت أولا باش نلقاو الصور');
-
-            els.genImgBtn.disabled = true;
-            els.genImgBtnText.textContent = 'جاري توليد الصور...';
-            
-            const prompts = visualsText.split('\n\n').map(p => p.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
-            els.imgContainer.innerHTML = '';
-            els.imgContainer.className = 'p-6 space-y-8';
+${inputScript}`;
 
             try {
-                const ai = new GoogleGenAI({ apiKey });
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
 
-                for (let i = 0; i < prompts.length; i++) {
-                    const prompt = prompts[i];
-                    
-                    // Add UI section for this prompt
-                    const section = document.createElement('div');
-                    section.className = 'border border-slate-100 rounded-xl p-4 bg-slate-50';
-                    section.innerHTML = `
-                        <h3 class="font-medium text-slate-800 mb-4 text-left" dir="ltr">
-                            <span class="text-indigo-600 font-bold mr-2">#${i + 1}</span>${prompt}
-                        </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" id="grid-${i}">
-                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
-                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
-                            <div class="aspect-[9/16] rounded-lg bg-slate-200 animate-pulse flex items-center justify-center border border-slate-300">⏳</div>
-                        </div>
-                    `;
-                    els.imgContainer.appendChild(section);
-
-                    const grid = document.getElementById(`grid-${i}`);
-                    
-                    try {
-                        // Generate 3 images in parallel
-                        const promises = Array.from({ length: 3 }).map(async () => {
-                            const res = await ai.models.generateContent({
-                                model: 'gemini-3.1-flash-image-preview',
-                                contents: prompt,
-                                config: { imageConfig: { aspectRatio: "9:16" } }
-                            });
-                            const parts = res.candidates?.[0]?.content?.parts || [];
-                            for (const part of parts) {
-                                if (part.inlineData) {
-                                    return 'data:' + (part.inlineData.mimeType || 'image/png') + ';base64,' + part.inlineData.data;
-                                }
-                            }
-                            return null;
-                        });
-
-                        const images = await Promise.all(promises);
-                        grid.innerHTML = '';
-                        
-                        images.forEach((img, imgIdx) => {
-                            if (img) {
-                                grid.innerHTML += `
-                                    <div class="relative aspect-[9/16] rounded-lg overflow-hidden border border-slate-200 shadow-sm group">
-                                        <img src="${img}" class="w-full h-full object-cover">
-                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <a href="${img}" download="image-${i+1}-${imgIdx+1}.png" class="bg-white text-slate-900 p-2 rounded-full hover:bg-slate-100">
-                                                <i data-lucide="download" class="w-5 h-5"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                `;
-                            }
-                        });
-                        lucide.createIcons();
-                    } catch (e) {
-                        console.error(e);
-                        grid.innerHTML = '<div class="col-span-3 text-red-500 text-sm">خطأ في توليد الصور لهاد المشهد</div>';
-                    }
+                if (!response.ok) {
+                    throw new Error('API Error');
                 }
-            } catch (err) {
-                console.error(err);
-                alert('وقع خطأ أثناء توليد الصور');
+
+                const data = await response.json();
+                let cleanedTranslated = data.candidates[0].content.parts[0].text || '';
+                
+                // Clean up text
+                cleanedTranslated = cleanedTranslated.replace(/[*#]/g, '');
+                cleanedTranslated = cleanedTranslated.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]/gu, '');
+                cleanedTranslated = cleanedTranslated.replace(/\n*(\[VISUAL:)/g, '\n\n$1').trim();
+
+                document.getElementById('translatedScript').value = cleanedTranslated;
+
+                // Extract pure text
+                const visualRegex = /\[VISUAL:\s*([\s\S]*?)\]/g;
+                const pure = cleanedTranslated.replace(visualRegex, '').replace(/\n{3,}/g, '\n\n').trim();
+                document.getElementById('pureText').value = pure;
+
+                // Extract visuals
+                const extractedVisuals = [];
+                let match;
+                while ((match = visualRegex.exec(cleanedTranslated)) !== null) {
+                    extractedVisuals.push(match[1].trim());
+                }
+                
+                const visualsText = extractedVisuals.map((v, i) => `${i + 1}. ${v}`).join('\n\n');
+                document.getElementById('visuals').value = visualsText;
+
+                // Update char count
+                const charCount = document.getElementById('charCount');
+                charCount.innerText = `${pure.length}/1100 حرف`;
+                charCount.className = `text-xs px-2 py-1 rounded-full font-bold ${pure.length > 1100 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+                charCount.classList.remove('hidden');
+
+                // Enable export
+                document.getElementById('exportBtn').disabled = false;
+
+            } catch (error) {
+                console.error(error);
+                alert("وقع شي مشكل. تأكد من مفتاح API ديالك.");
             } finally {
-                els.genImgBtn.disabled = false;
-                els.genImgBtnText.textContent = 'توليد الصور';
+                // Reset loading state
+                btn.disabled = false;
+                btnIcon.setAttribute('data-lucide', 'sparkles');
+                btnIcon.classList.remove('spin');
+                lucide.createIcons();
+                btnText.innerText = 'عالج السكريبت';
             }
-        });
+        }
+
+        function copyText(elementId, btnElement) {
+            const text = document.getElementById(elementId).value;
+            navigator.clipboard.writeText(text);
+            
+            const icon = btnElement.querySelector('i');
+            icon.setAttribute('data-lucide', 'check');
+            icon.classList.add('text-green-600');
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                icon.setAttribute('data-lucide', 'copy');
+                icon.classList.remove('text-green-600');
+                lucide.createIcons();
+            }, 2000);
+        }
+
+        function exportToHTML() {
+            const translatedScript = document.getElementById('translatedScript').value;
+            const pureText = document.getElementById('pureText').value;
+            const visuals = document.getElementById('visuals').value;
+
+            const htmlContent = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptAuto SaaS - Exported Script</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background-color: #f8fafc; color: #0f172a; line-height: 1.6; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #4f46e5; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 2rem; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr; } }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; }
+        .card-header { background: #f1f5f9; padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 600; color: #334155; }
+        .card-body { padding: 1rem; flex: 1; }
+        pre { white-space: pre-wrap; font-family: inherit; background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; direction: ltr; text-align: left; margin: 0; height: 100%; }
+        .full-width { grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <h1>ScriptAuto SaaS - Exported Script</h1>
+    <div class="grid">
+        <div class="card full-width">
+            <div class="card-header">السكريبت المترجم (Español + Visuals)</div>
+            <div class="card-body"><pre>${translatedScript}</pre></div>
+        </div>
+        <div class="card">
+            <div class="card-header">النص الصافي (Español فقط)</div>
+            <div class="card-body"><pre>${pureText}</pre></div>
+        </div>
+        <div class="card">
+            <div class="card-header">الصور (Visual Prompts)</div>
+            <div class="card-body"><pre>${visuals}</pre></div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'scriptauto-export.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
     </script>
 </body>
 </html>
+
